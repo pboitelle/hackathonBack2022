@@ -2,42 +2,70 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Action\NotFoundAction;
 use ApiPlatform\Core\Annotation\ApiResource;
+use App\Controller\MeController;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
-#[ApiResource]
-class User
+#[ApiResource(
+    collectionOperations: [
+        'me' => [
+            'pagination_enabled' => false,
+            'path' => '/me',
+            'method' => 'get',
+            'controller' => MeController::class,
+            'read' => false,
+            'security' => 'is_granted("ROLE_ADMIN")'
+        ]
+    ],
+    itemOperations: [
+        'get' => [
+            'controller' => NotFoundAction::class,
+            'openapi_context' => ['summary' => 'hidden'],
+            'read' => false,
+            'output' => false
+        ]
+        ],
+        normalizationContext: ['groups' => ['read:User']]
+)]
+class User implements UserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['read:User'])]
     private $id;
 
+    #[Groups(['read:User'])]
     #[ORM\Column(type: 'string', length: 255)]
-    private $login;
+    private $email;
 
     #[ORM\Column(type: 'string', length: 255)]
     private $password;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    private $email;
+    #[ORM\Column(type: 'json')]
+    #[Groups(['read:User'])]
+    private $roles = [];
+
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getLogin(): ?string
+    public function getEmail(): ?string
     {
-        return $this->login;
+        return $this->email;
     }
 
-    public function setLogin(string $login): self
+    public function setEmail(string $email): self
     {
-        $this->login = $login;
+        $this->email = $email;
 
         return $this;
     }
@@ -54,15 +82,29 @@ class User
         return $this;
     }
 
-    public function getEmail(): ?string
+    public function getUserIdentifier(): string
     {
         return $this->email;
     }
 
-    public function setEmail(string $email): self
+    public function setRoles(array $roles): self
     {
-        $this->email = $email;
+        $this->roles = $roles;
 
         return $this;
+    }
+
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function eraseCredentials()
+    {
+
     }
 }

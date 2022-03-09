@@ -2,12 +2,12 @@ security:
     enable_authenticator_manager: true
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
-        App\Entity\Admin: 'auto'
+        App\Entity\User: 'auto'
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
         app_admin_provider:
             entity:
-                class: App\Entity\Admin
+                class: App\Entity\User
                 property: email
 
     firewalls:
@@ -15,15 +15,10 @@ security:
             pattern: ^/_(profiler|wdt)
             security: false
         main:
-            stateless: true
+            lazy: true
             provider: app_admin_provider
             json_login:
-                check_path: /authentication_token
-                username_path: email
-                password_path: password
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
-            jwt: ~
+                check_path: api_login
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -34,8 +29,7 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-    - { path: ^/authentication_token, roles: PUBLIC_ACCESS }
-    - { path: ^/admin, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/admin, roles: ['ROLE_ADMIN'] }
 
 when@test:
     security:
