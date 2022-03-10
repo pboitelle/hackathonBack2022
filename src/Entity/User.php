@@ -9,10 +9,12 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[ApiResource(
+    security: 'is_granted("ROLE_ADMIN")',
     collectionOperations: [
         'me' => [
             'pagination_enabled' => false,
@@ -20,7 +22,9 @@ use Symfony\Component\Serializer\Annotation\Groups;
             'method' => 'get',
             'controller' => MeController::class,
             'read' => false,
-            'security' => 'is_granted("ROLE_ADMIN")'
+            'openapi_context' => [
+                'security' => ['cookieAuth' => []]
+            ]
         ]
     ],
     itemOperations: [
@@ -30,10 +34,10 @@ use Symfony\Component\Serializer\Annotation\Groups;
             'read' => false,
             'output' => false
         ]
-        ],
-        normalizationContext: ['groups' => ['read:User']]
+    ],
+    normalizationContext: ['groups' => ['read:User']]
 )]
-class User implements UserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -78,6 +82,7 @@ class User implements UserInterface
     public function setPassword(string $password): self
     {
         $this->password = $password;
+        
 
         return $this;
     }

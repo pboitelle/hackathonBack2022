@@ -2,7 +2,7 @@ security:
     enable_authenticator_manager: true
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
-        App\Entity\User: 'auto'
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
         app_admin_provider:
@@ -19,6 +19,8 @@ security:
             provider: app_admin_provider
             json_login:
                 check_path: api_login
+            logout: 
+                path: api_logout
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
