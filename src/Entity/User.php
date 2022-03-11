@@ -5,6 +5,7 @@ namespace App\Entity;
 use ApiPlatform\Core\Action\NotFoundAction;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Controller\MeController;
+use App\Controller\RegistrationController;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -22,6 +23,13 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
             'method' => 'get',
             'controller' => MeController::class,
             'read' => false,
+            'openapi_context' => [
+                'security' => ['cookieAuth' => []]
+            ]
+        ],
+        'post' => [
+            'method' => 'POST',
+            'controller' => RegistrationController::class,
             'openapi_context' => [
                 'security' => ['cookieAuth' => []]
             ]
