@@ -7,7 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -22,28 +22,34 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('/api/registration', name: 'api_register', methods: ['POST'])]
-    public function __invoke(MailerInterface $mailer, ManagerRegistry $doctrine)
+    public function __invoke(User $data, MailerInterface $mailer, ManagerRegistry $doctrine)
     {
+
         $entityManager = $doctrine->getManager();
 
-        $user = new User();
+        //$password = 'loreal232';
+        //$user->setEmail('loreal@gmail.com');
 
-        $password = 'loreal232';
-        $user->setEmail('loreal@gmail.com');
+        $passwordNotHashed = $data->getPassword();
+
         $hashedPassword = $this->hasher->hashPassword(
-            $user,
-            $password
+            $data,
+            $passwordNotHashed
         );
-        $user->setPassword($hashedPassword);
+        $data->setPassword($hashedPassword);
 
-        $entityManager->persist($user);
+        $entityManager->persist($data);
         $entityManager->flush();
 
-        $email = (new Email())
+        $email = (new TemplatedEmail())
         ->from('pi.boitelle@gmail.com')
         ->to('pi.boitelle@gmail.com')
         ->subject('LOGIN - L\'OREAL')
-        ->html('<h1>Vos identifiants</h1><p><b>Email :</b> loreal@gmail.com</p><p><b>Password :</b> loreal232</p>');
+        ->htmlTemplate('emails/register.html.twig')
+        ->context([
+            'emailUser' => $data->getEmail(),
+            'passwordUser' => $passwordNotHashed,
+        ]);
 
         $mailer->send($email);
     }
